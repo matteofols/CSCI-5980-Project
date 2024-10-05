@@ -24,6 +24,8 @@ class KV_store:
         
     def PUT (self, key, value):
         self.log_queue.append(f'PUT({key}, {value})') # a queue of all the operations in the KV_store
+        if (key in self.parent_dict):
+            return f'Key: {key} already exists. Use the Set({key}, {value}) function to update the key'
         self.parent_dict[key] = value
         return f'Key: {key} has been successfully added'
 
