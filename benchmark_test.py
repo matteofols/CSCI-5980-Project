@@ -71,7 +71,7 @@ def run_benchmark():
     for i in range(NUM_THREADS * OPS_PER_THREAD):
         op_type = 'SET' if i % 2 else 'GET'
         key = f"key_{i}"
-        value = f"value_{i}" if op_type == 'set' else None
+        value = f"value_{i}" if op_type == 'SET' else None
         operations_queue.put((op_type, key, value))
 
     # Create and start worker threads

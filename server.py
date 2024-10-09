@@ -1,14 +1,47 @@
 import socket
 import threading
 import key_value_store
-# from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify
 from benchmark_test import run_benchmark
 
-# app = Flask(__name__)
+app = Flask(__name__)
 
-# kv_store = key_value_store.KV_store()
-kv_store_lock = threading.Lock()
+kv_store = key_value_store.KV_store()
+#kv_store_lock = threading.Lock()
 
+@app.route('/<key>', methods=['GET', 'POST'])
+def handle_key(key):
+    if request.method == 'POST':
+        # Expecting JSON with 'value'
+        value_json = request.get_json()
+        if value_json == None:
+            return jsonify({"message": "Missing 'value' in request"}), 400
+        value = value_json['value']
+
+        # Decide whether to PUT or SET based on key existence
+        if key in kv_store.parent_dict:
+            return jsonify(kv_store.SET(key, value))
+        else:
+            return jsonify(kv_store.PUT(key, value)), 201
+            
+    elif request.method == 'GET':
+        return jsonify(kv_store.GET(key))
+    else:
+        return jsonify({"message": "Unsupported HTTP method"}), 405
+
+
+# @app.route('/<key>', methods=['GET'])
+# def get_value(key):
+#     value = kv_store.GET(key)
+#     return jsonify(value)
+
+# @app.route('/<key>', methods=['POST'])
+# def set_value(key):
+#     value = request.json.get('value')
+#     result = kv_store.PUT(key, value)
+#     return jsonify(result)
+
+'''
 # Function to handle client requests
 def request_handling(client_conn, client_addr):
     print(f"Request received: {request_split}") 
@@ -80,21 +113,11 @@ def server():
         # Start a new thread to handle each client connection
         thread = threading.Thread(target=request_handling, args=(client_conn, client_addr))
         thread.start()
-
-# @app.route('/<key>', methods=['GET'])
-# def get_value(key):
-#     value = kv_store.GET(key)
-#     return jsonify(value)
-
-# @app.route('/<key>', methods=['POST'])
-# def set_value(key):
-#     value = request.json.get('value')
-#     result = kv_store.PUT(key, value)
-#     return jsonify(result)
+'''
 
 
 
 if __name__ == "__main__":
+    app.run(host='127.0.0.1', port=5000, threaded=True)
     run_benchmark()
     # server()
-    app.run(host='127.0.0.1', port=5000)
