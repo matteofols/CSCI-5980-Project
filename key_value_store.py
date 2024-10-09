@@ -1,11 +1,12 @@
-
+import threading
 
 class KV_store:
 
     def __init__(self):
         self.parent_dict = {}
         self.log_queue = []
-
+        self.lock = threading.Lock()
+        
     def GET(self, key):
         with self.lock:
             self.log_queue.append(f'GET({key})') # a queue of all the operations in the KV_store
