@@ -1,4 +1,3 @@
-import socket
 import threading
 import key_value_store
 from flask import Flask, request, jsonify
