@@ -1,4 +1,5 @@
 import threading
+from datetime import datetime
 
 class KV_store:
 
@@ -6,10 +7,14 @@ class KV_store:
         self.parent_dict = {}
         self.log_queue = []
         self.lock = threading.Lock()
-        
+    
+    def _get_timestamp(self):
+        return datetime.now().strftime("%m-%d-%Y %H:%M:%S")
+    
     def GET(self, key):
+        timestamp = self._get_timestamp()
         with self.lock:
-            self.log_queue.append(f'GET({key})') # a queue of all the operations in the KV_store
+            self.log_queue.append(f'GET({key}) - {timestamp}') # a queue of all the operations in the KV_store
             if (key in self.parent_dict):
                 return {"value": self.parent_dict[key]} 
             # Error Handling
@@ -17,8 +22,9 @@ class KV_store:
                 return {"message": f'Key: {key} not found'}
 
     def SET(self, key, value):  # only used to update the values that already exist in the store
+        timestamp = self._get_timestamp()
         with self.lock:
-            self.log_queue.append(f'SET({key}, {value})') # a queue of all the operations in the KV_store
+            self.log_queue.append(f'SET({key}, {value}) - {timestamp}') # a queue of all the operations in the KV_store
             if (key in self.parent_dict):
                 self.parent_dict[key] = value
                 return {"message": f'Key: {key} value successfully set to {value}'}
@@ -26,16 +32,18 @@ class KV_store:
                 return {"message": f'Key: {key} not found. Use the PUT({key}, {value}) to add the pair to the store'}
             
     def PUT(self, key, value):
+        timestamp = self._get_timestamp()
         with self.lock:
-            self.log_queue.append(f'PUT({key}, {value})') # a queue of all the operations in the KV_store
+            self.log_queue.append(f'PUT({key}, {value}) - {timestamp}') # a queue of all the operations in the KV_store
             if (key in self.parent_dict):
                 return {"message": f'Key: {key} already exists. Use the Set({key}, {value}) function to update the key'}
             self.parent_dict[key] = value
             return {"message": f'Key: {key} has been successfully added'}
 
     def DELETE(self, key):
+        timestamp = self._get_timestamp()
         with self.lock:
-            self.log_queue.append(f'DELETE({key})') # a queue of all the operations in the KV_store
+            self.log_queue.append(f'DELETE({key}) - {timestamp}') # a queue of all the operations in the KV_store
             if (key in self.parent_dict):
                 del(self.parent_dict[key])
                 return {"message": f'Key {key} has been deleted successfully'}
