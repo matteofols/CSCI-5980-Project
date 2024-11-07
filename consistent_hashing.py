@@ -1,8 +1,8 @@
 # This is a consistent hashing file that will hash the instances of the KV stores and distribute the request 
 
 import hashlib as hash
-import assignment1.server as server
-import assignment1.key_value_store as KV_store
+# import server as server
+from key_value_store import KV_store as KV_store
 
 
 class ConsistentHashing:

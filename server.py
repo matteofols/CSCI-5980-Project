@@ -1,5 +1,5 @@
 import threading
-import assignment1.key_value_store as key_value_store
+from key_value_store import KV_store as key_value_store
 from flask import Flask, request, jsonify
 from benchmark_test import run_benchmark
 from consistent_hashing import ConsistentHashing
@@ -11,11 +11,11 @@ ch = ConsistentHashing()
 
 # Create multiple instances of KV Store
 kv_stores = {
-    'KVStore1': key_value_store.KV_store(), 
-    'KVStore2': key_value_store.KV_store(), 
-    'KVStore3': key_value_store.KV_store()
+    'KVStore1': key_value_store()#, 
+    # 'KVStore2': key_value_store()#, #You can uncomment this part to test with multiple stores available.
+    # 'KVStore3': key_value_store()
 }
-for store_name in KV:
+for store_name in kv_stores:
     ch.add_instance(store_name)
 
 
@@ -25,19 +25,21 @@ def handle_key(key):
 
     if instance_name is None:
         return jsonify({"message": "No available instance for the key"}), 500
+    
+    kv_store = kv_stores[instance_name] # Get the selected KV store instance
 
     if request.method == 'POST':
         value_json = request.get_json()
         if value_json is None or 'value' not in value_json:
             return jsonify({"message": "Missing 'value' in request"}), 400
         value = value_json['value']
-        kv_store = kv_stores[instance_name] # Get the selected KV store instance
+        
 
         if key in kv_store.parent_dict:
             return jsonify(kv_store.SET(key, value))
         else:
             return jsonify(kv_store.PUT(key, value))
-            
+          
     elif request.method == 'GET':
         return jsonify(kv_store.GET(key))
     else:
