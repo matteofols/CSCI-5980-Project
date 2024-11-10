@@ -2,12 +2,11 @@ import threading
 import queue
 import requests
 import time
-import random
 
-# The base URL of the Flask server
-BASE_URL = 'http://127.0.0.1:5000'  # Update port if necessary
+# Base URL for the Flask server
+BASE_URL = 'http://127.0.0.1:5000'
 
-# Configure the number of threads and operations
+# Configurable number of threads and operations per thread
 NUM_THREADS = 3
 OPS_PER_THREAD = 100
 PRINT_INTERVAL = 3  # Interval for printing intermediate results
@@ -19,36 +18,39 @@ latencies_queue = queue.Queue()
 # Synchronize the starting of threads
 start_event = threading.Event()
 
-# Client operation function
+# Function to perform KV store operations and record latency
 def kv_store_operation(op_type, key, value=None):
-    print(f"Attempting {op_type} for key: {key} with value: {value}")
     try:
+        url = f"{BASE_URL}/{key}"
+        start_time = time.time()
+
         if op_type == 'SET':
-            response = requests.post(f"{BASE_URL}/{key}", json={'value': value})
+            response = requests.post(url, json={'value': value})
         elif op_type == 'GET':
-            response = requests.get(f"{BASE_URL}/{key}")
+            response = requests.get(url)
+        elif op_type == 'DELETE':
+            response = requests.delete(url)
         else:
             raise ValueError("Invalid operation type")
-        response.raise_for_status()  # This will raise an error for non-2xx responses
+
+        response.raise_for_status()  # This raises an error for non-2xx responses
+        latency = time.time() - start_time
+        latencies_queue.put(latency)
         return True
     except Exception as e:
         print(f"Error during {op_type} operation for key '{key}': {e}")
         return False
 
-# Worker thread function
+# Worker thread function to execute operations
 def worker_thread():
     while not start_event.is_set():
-        # Wait until all threads are ready to start
-        pass
+        pass  # Wait until all threads are ready
 
     while not operations_queue.empty():
         op, key, value = operations_queue.get()
-        start_time = time.time()
-        if kv_store_operation(op, key, value):
-            latency = time.time() - start_time
-            latencies_queue.put(latency)
+        kv_store_operation(op, key, value)
 
-# Monitoring thread function
+# Function to monitor and report performance
 def monitor_performance():
     last_print = time.time()
     while True:
@@ -56,6 +58,7 @@ def monitor_performance():
         current_time = time.time()
         elapsed_time = current_time - last_print
         latencies = []
+
         while not latencies_queue.empty():
             latencies.append(latencies_queue.get())
 
@@ -66,7 +69,10 @@ def monitor_performance():
                   f"Avg Latency: {avg_latency:.5f} sec/ops")
         last_print = time.time()
 
-def run_benchmark():
+# Function to run the benchmark for a given number of KV stores
+def run_benchmark(num_kv_stores):
+    print(f"\nStarting benchmark with {num_kv_stores} KV stores...")
+
     # Populate the operation queue with mixed 'set' and 'get' requests
     for i in range(NUM_THREADS * OPS_PER_THREAD):
         op_type = 'SET' if i % 2 else 'GET'
@@ -93,16 +99,20 @@ def run_benchmark():
 
     # Calculate final results
     total_time = time.time() - start_time
-    total_ops = NUM_THREADS * OPS_PER_THREAD * 2  # times two for 'set' and 'get'
+    total_ops = NUM_THREADS * OPS_PER_THREAD
     total_latencies = list(latencies_queue.queue)
     average_latency = sum(total_latencies) / len(total_latencies) if total_latencies else float('nan')
     throughput = total_ops / total_time
 
-    print("\nFinal Results:")
+    print(f"\nResults for {num_kv_stores} KV stores:")
     print(f"Total operations: {total_ops}")
     print(f"Total time: {total_time:.2f} seconds")
     print(f"Throughput: {throughput:.2f} operations per second")
     print(f"Average Latency: {average_latency:.5f} seconds per operation")
 
+# Running benchmarks incrementally from 1 to 3 KV stores
 if __name__ == "__main__":
-    run_benchmark()
+    for num_kv_stores in range(1, 4):
+        # Adjust server setup based on the number of KV stores (handled in server.py)
+        run_benchmark(num_kv_stores)
+        time.sleep(5)  # Delay to reset between tests
