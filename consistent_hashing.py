@@ -6,7 +6,7 @@ from key_value_store import KV_store as KV_store
 
 
 class ConsistentHashing:
-    def __init__(self, num_replicas=3):
+    def __init__(self, num_replicas):
         """Initialize the Consistent Hashing structure with a specified number of replicas."""
         self.num_replicas = num_replicas
         self.server_ring = {}

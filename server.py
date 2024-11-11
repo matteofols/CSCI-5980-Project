@@ -7,17 +7,29 @@ from consistent_hashing import ConsistentHashing
 app = Flask(__name__)
 
 # Initialize Consistent Hasishing 
-ch = ConsistentHashing()
+ch = ConsistentHashing(num_replicas=1)
+kv_stores = {}
 
-# Create multiple instances of KV Store
-kv_stores = {
-    'KVStore1': key_value_store()#, 
-    # 'KVStore2': key_value_store()#, #You can uncomment this part to test with multiple stores available.
-    # 'KVStore3': key_value_store()
-}
-for store_name in kv_stores:
-    ch.add_instance(store_name)
 
+# Endpoint to set the number of replicas for consistent hashing.
+@app.route('/set_replicas', methods=['POST'])
+def set_replicas():
+    global ch, num_replicas
+    data = request.json
+    if "num_replicas" not in data:
+        return jsonify({"message": "Missing 'num_replicas' in request"}), 400
+    num_replicas = data["num_replicas"]
+
+    # Reinitialize Consistent Hashing with new num_replicas
+    ch = ConsistentHashing(num_replicas=num_replicas)
+
+    for i in range(num_replicas):
+        kv_stores[f'KVStore{i+1}'] = key_value_store()
+
+    for store_name in kv_stores:
+        ch.add_instance(store_name)
+
+    return jsonify({"message": f"Number of replicas set to {num_replicas}"}), 200
 
 @app.route('/<key>', methods=['GET', 'POST'])
 def handle_key(key):
