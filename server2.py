@@ -51,5 +51,5 @@ def get_log():
     return jsonify(kv_store.GET_LOG())
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=5000, threaded=True)
+    app.run(host='127.0.0.1', port=5002, threaded=True)
 

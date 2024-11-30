@@ -6,11 +6,16 @@ from key_value_store import KV_store as KV_store
 
 
 class ConsistentHashing:
-    def __init__(self, num_replicas):
+    def __init__(self, nodes=None, num_replicas=3):
         """Initialize the Consistent Hashing structure with a specified number of replicas."""
         self.num_replicas = num_replicas
         self.server_ring = {}
         self.sorted_keys = []
+
+        # Adds all nodes to the ring
+        if nodes:
+            for node in nodes:
+                self.add_instance(node)
 
     def _hash(self, key):
         """Generate a hash for the given key."""
@@ -30,8 +35,9 @@ class ConsistentHashing:
         for i in range(self.num_replicas):
             replica_key = f"{instance}:{i}"
             hashed_key = self._hash(replica_key)
-            del self.server_ring[hashed_key]
-            self.sorted_keys.remove(hashed_key)
+            if hashed_key in self.server_ring:
+                del self.server_ring[hashed_key]
+                self.sorted_keys.remove(hashed_key)
 
     def _find_position(self, hashed_key):
         """Find the position of the hashed key on the ring."""
@@ -51,6 +57,10 @@ class ConsistentHashing:
     
     def instance_count(self):
         return len(self.server_ring)
+    
+    def get_instances(self):
+        """Return all instances currently in the ring."""
+        return list(self.server_ring.values())
 
 
 
