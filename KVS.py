@@ -7,8 +7,8 @@ from consistent_hashing import ConsistentHashing
 
 # The base URL of the Flask server
 BASE_URLS = ['http://127.0.0.1:5000', 
-             #'http://127.0.0.1:5001', 
-             #'http://127.0.0.1:5002'
+             'http://127.0.0.1:5001', 
+             'http://127.0.0.1:5002'
              ]
 
 

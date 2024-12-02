@@ -61,22 +61,3 @@ class ConsistentHashing:
     def get_instances(self):
         """Return all instances currently in the ring."""
         return list(self.server_ring.values())
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
